@@ -60,6 +60,8 @@ if (MSVC)
 
     set(PLATFORM_LIBS "")
 elseif (MINGW)
+    add_link_options(-static -static-libgcc -static-libstdc++)
+
     set(SDL3_BASE_DIR "${CMAKE_SOURCE_DIR}/external/SDL3/SDL3-devel-3.4.18-mingw/SDL3-3.4.18/x86_64-w64-mingw32")
     set(SDL3_LIB_PATH "${SDL3_BASE_DIR}/lib/libSDL3.dll.a")
     set(SDL3_DLL_PATH "${SDL3_BASE_DIR}/bin/SDL3.dll")
@@ -109,3 +111,19 @@ add_custom_command(
         "$<TARGET_FILE_DIR:sprite-animations>/assets"
         COMMENT "Copying assets directory to output folder..."
 )
+
+if (MINGW)
+    get_filename_component(MINGW_BIN_DIR "${CMAKE_CXX_COMPILER}" DIRECTORY)
+
+    foreach (MINGW_DLL libstdc++-6.dll libgcc_s_seh-1.dll libwinpthread-1.dll)
+        if (EXISTS "${MINGW_BIN_DIR}/${MINGW_DLL}")
+            add_custom_command(
+                    TARGET sprite-animations POST_BUILD
+                    COMMAND ${CMAKE_COMMAND} -E copy
+                    "${MINGW_BIN_DIR}/${MINGW_DLL}"
+                    "$<TARGET_FILE_DIR:sprite-animations>/${MINGW_DLL}"
+                    COMMENT "Copying ${MINGW_DLL} to output folder..."
+            )
+        endif ()
+    endforeach ()
+endif ()
